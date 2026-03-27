@@ -7,10 +7,10 @@ import { formatPrice, formatDate, getImageUrl } from '../utils/format';
 import { Package, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
 
 const STAGES = [
-    { key: 'Pending',    label: 'Order Received',  Icon: Package },
-    { key: 'Processing', label: 'Preparing',        Icon: Clock },
-    { key: 'Shipped',    label: 'In Transit',       Icon: Truck },
-    { key: 'Delivered',  label: 'Delivered',        Icon: CheckCircle },
+    { key: 'Pending',    label: 'Awaiting Acceptance', Icon: Package },
+    { key: 'Processing', label: 'Order Accepted & Preparing', Icon: Clock },
+    { key: 'Shipped',    label: 'In Transit', Icon: Truck },
+    { key: 'Delivered',  label: 'Delivered',  Icon: CheckCircle },
 ];
 
 const RETURN_STAGES = [
@@ -191,17 +191,19 @@ export default function Orders() {
                                     <p className="text-gray-900 font-mono font-semibold">{String(order.id).padStart(6, '0')}</p>
                                 </div>
 
-                                {/* Cancel button — only for Pending orders */}
-                                {order.status === 'Pending' && (
+                                {/* Cancel button — for Pending or Processing orders */}
+                                {['Pending', 'Processing'].includes(order.status) && (
                                     <div className="text-right">
                                         <button
                                             onClick={() => handleCustomerCancel(order.id)}
                                             disabled={returningId === order.id}
                                             className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-red-600 border border-red-300 bg-red-50 hover:bg-red-100 px-4 py-2 transition disabled:opacity-50"
                                         >
-                                            {returningId === order.id ? 'Cancelling...' : 'Cancel Order'}
+                                            {returningId === order.id ? 'Processing...' : 'Cancel Order'}
                                         </button>
-                                        <p className="text-[9px] text-gray-400 mt-1.5">Only available before processing</p>
+                                        <p className="text-[9px] text-gray-400 mt-1.5">
+                                            {order.status === 'Processing' ? 'Order accepted - cancellation still available' : 'Available before dispatch'}
+                                        </p>
                                     </div>
                                 )}
 

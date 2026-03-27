@@ -19,13 +19,14 @@ class DashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminUser]
 
     def get(self, request):
-        total_sales = Order.objects.aggregate(Sum('total_price'))['total_price__sum'] or 0
-        total_orders = Order.objects.count()
+        # Net sales = Total price of all orders except Cancelled and Refunded
+        total_sales = Order.objects.exclude(status__in=['Cancelled', 'Refunded']).aggregate(Sum('total_price'))['total_price__sum'] or 0
+        total_orders = Order.objects.count() # Count all orders
         total_products = Product.objects.count()
         low_stock_alerts = Product.objects.filter(stock__lte=5).count()
 
         return Response({
-            'total_sales': total_sales,
+            'total_sales': float(total_sales),
             'total_orders': total_orders,
             'total_products': total_products,
             'low_stock_alerts': low_stock_alerts
@@ -36,16 +37,18 @@ class SalesAnalyticsView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsAdminUser]
 
     def get(self, request):
-        # Return last 7 days sales
+        # Return last 7 days sales (Net revenue)
         today = timezone.now().date()
         data = []
         for i in range(6, -1, -1):
             date = today - timedelta(days=i)
             daily_orders = Order.objects.filter(created_at__date=date)
-            daily_sales = daily_orders.aggregate(Sum('total_price'))['total_price__sum'] or 0
+            # Revenue debits refunded/cancelled orders
+            daily_sales = daily_orders.exclude(status__in=['Cancelled', 'Refunded']).aggregate(Sum('total_price'))['total_price__sum'] or 0
             data.append({
                 'date': date.strftime('%Y-%m-%d'),
-                'sales': daily_sales
+                'sales': float(daily_sales),
+                'order_count': daily_orders.count()
             })
         return Response(data)
 
@@ -92,16 +95,18 @@ class MonthlyRevenueView(APIView):
             # First day of each month going back
             year = (today.replace(day=1) - timedelta(days=i * 30)).year
             month = (today.replace(day=1) - timedelta(days=i * 30)).month
-            month_orders = Order.objects.filter(
+            
+            all_month_orders = Order.objects.filter(
                 created_at__year=year,
-                created_at__month=month,
-                status__in=['Pending', 'Processing', 'Shipped', 'Delivered']
+                created_at__month=month
             )
-            revenue = month_orders.aggregate(Sum('total_price'))['total_price__sum'] or 0
+            # Net revenue excludes returns/cancellations
+            revenue = all_month_orders.exclude(status__in=['Cancelled', 'Refunded']).aggregate(Sum('total_price'))['total_price__sum'] or 0
+            
             data.append({
                 'month': f"{year}-{month:02d}",
                 'revenue': float(revenue),
-                'orders': month_orders.count(),
+                'orders': all_month_orders.count(), # Count all orders
             })
         return Response(data)
 

@@ -35,9 +35,9 @@ class MockPaymentView(APIView):
             # Create the order
             order = Order.objects.create(
                 user=request.user,
-                status='Processing',
+                status='Pending',
                 total_price=total_price,
-                tracking_info='Paid via Mock Gateway. Your order is being prepared.'
+                tracking_info='Paid via Mock Gateway. Waiting for shop to accept.'
             )
 
             # Create order items and update stock

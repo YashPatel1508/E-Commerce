@@ -131,7 +131,7 @@ class OrderCancelReturnView(APIView):
 
 
 class OrderCustomerCancelPendingView(APIView):
-    """Customer: cancel a Pending order."""
+    """Customer: cancel a Pending or Processing order. Restores stock."""
     permission_classes = [permissions.IsAuthenticated]
 
     def patch(self, request, pk):
@@ -140,14 +140,20 @@ class OrderCustomerCancelPendingView(APIView):
         except Order.DoesNotExist:
             return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        if order.status != 'Pending':
+        if order.status not in ('Pending', 'Processing'):
             return Response(
-                {'detail': 'Only pending orders can be cancelled by the customer.'},
+                {'detail': 'Only orders in Pending or Preparing status can be cancelled by the customer.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Restore stock logic
+        for item in order.items.all():
+            if item.product:
+                item.product.stock += item.quantity
+                item.product.save()
+
         order.status = 'Cancelled'
-        order.tracking_info = 'Your order has been cancelled.'
+        order.tracking_info = 'Order cancelled by customer. Any payment will be processed for refund.'
         order.save()
 
         serializer = OrderSerializer(order)

@@ -124,8 +124,8 @@ export default function Checkout() {
                     {step === 2 && (
                         <div className="p-24 flex flex-col items-center justify-center text-center">
                             <Loader2 className="w-8 h-8 text-luxury-gold animate-spin mb-8" strokeWidth={1} />
-                            <h2 className="text-2xl font-display font-medium text-luxury-black mb-4">Redirecting to Secure Payment</h2>
-                            <p className="text-luxury-gray font-light text-sm">You are being safely redirected to Stripe to complete your purchase.</p>
+                            <h2 className="text-2xl font-display font-medium text-luxury-black mb-4">Processing Your Order</h2>
+                            <p className="text-luxury-gray font-light text-sm">Validating your transaction and securing your purchase. Please do not refresh.</p>
                         </div>
                     )}
                 </div>

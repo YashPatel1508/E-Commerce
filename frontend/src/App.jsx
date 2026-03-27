@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import AdminLayout from './components/AdminLayout';
+import Chatbot from './components/Chatbot';
 
 import Home from './pages/Home';
 import Shop from './pages/Shop';
@@ -48,6 +49,7 @@ function App() {
                 </Route>
               </Routes>
             </main>
+            <Chatbot />
           </div>
         </Router>
       </CartProvider>
