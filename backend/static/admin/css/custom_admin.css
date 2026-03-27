@@ -1,0 +1,430 @@
+/* FeelLuxury Admin — Custom Django Admin Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+    --gold: #c5a059;
+    --gold-light: #d4b97a;
+    --black: #0a0a0a;
+    --cream: #faf8f3;
+    --charcoal: #2d2d2d;
+    --gray: #8c8c8c;
+    --border: #e8e4db;
+    --white: #ffffff;
+    --success: #2e7d32;
+    --error: #c62828;
+    --warning: #f57c00;
+}
+
+/* === Base === */
+body {
+    font-family: 'Inter', sans-serif !important;
+    background-color: var(--cream) !important;
+    color: var(--charcoal) !important;
+    font-size: 13px !important;
+}
+
+/* === Header === */
+#header {
+    background: var(--black) !important;
+    border-bottom: 2px solid var(--gold) !important;
+    padding: 10px 24px !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3) !important;
+}
+
+#header a:link, #header a:visited {
+    color: var(--gold) !important;
+}
+
+#site-name a {
+    font-family: 'Cormorant Garamond', serif !important;
+    font-size: 22px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.15em !important;
+    color: var(--gold) !important;
+    text-transform: uppercase !important;
+}
+
+#user-tools {
+    font-size: 11px !important;
+    letter-spacing: 0.08em !important;
+    color: var(--gray) !important;
+}
+
+#user-tools a {
+    color: var(--gold-light) !important;
+    text-decoration: none !important;
+    border-bottom: 1px solid transparent !important;
+    transition: border-color 0.2s !important;
+}
+
+#user-tools a:hover {
+    border-bottom-color: var(--gold) !important;
+}
+
+/* === Breadcrumbs === */
+div.breadcrumbs {
+    background: var(--black) !important;
+    border-bottom: 1px solid #222 !important;
+    padding: 8px 24px !important;
+    font-size: 11px !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+}
+
+div.breadcrumbs a {
+    color: var(--gold) !important;
+}
+
+/* === Sidebar & Navigation === */
+#nav-sidebar {
+    background: var(--white) !important;
+    border-right: 1px solid var(--border) !important;
+}
+
+#nav-sidebar .current-app .section:link,
+#nav-sidebar .current-app .section:visited {
+    color: var(--gold) !important;
+}
+
+/* === Content === */
+#content {
+    padding: 24px !important;
+}
+
+#content h1 {
+    font-family: 'Cormorant Garamond', serif !important;
+    font-size: 26px !important;
+    font-weight: 500 !important;
+    color: var(--black) !important;
+    letter-spacing: 0.05em !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 20px !important;
+}
+
+/* === Module/App headers === */
+.module h2, .module caption {
+    background: var(--black) !important;
+    color: var(--gold) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+    padding: 10px 16px !important;
+}
+
+.module {
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+    margin-bottom: 16px !important;
+    background: var(--white) !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+}
+
+/* === Dashboard app list === */
+.app-products th, .app-orders th, .app-users th, .app-dashboard th {
+    background: var(--cream) !important;
+}
+
+/* === Tables === */
+#result_list thead th {
+    background: var(--black) !important;
+    color: var(--gold) !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+    border: none !important;
+    padding: 12px 16px !important;
+}
+
+#result_list thead th a {
+    color: var(--gold) !important;
+}
+
+#result_list thead th.sorted {
+    background: #1a1a1a !important;
+}
+
+#result_list tbody tr {
+    border-bottom: 1px solid var(--border) !important;
+}
+
+#result_list tbody tr:hover td {
+    background: #fdf9f0 !important;
+}
+
+#result_list tbody tr.selected td {
+    background: #fff8e8 !important;
+}
+
+#result_list td, #result_list th {
+    padding: 12px 16px !important;
+    font-size: 12px !important;
+}
+
+#result_list td a {
+    color: var(--charcoal) !important;
+    font-weight: 500 !important;
+}
+
+#result_list td a:hover {
+    color: var(--gold) !important;
+}
+
+/* === Pagination === */
+.paginator {
+    border-top: 1px solid var(--border) !important;
+    background: var(--cream) !important;
+    color: var(--gray) !important;
+    font-size: 11px !important;
+    letter-spacing: 0.05em !important;
+    padding: 10px 16px !important;
+}
+
+.paginator a {
+    color: var(--gold) !important;
+}
+
+/* === Buttons === */
+.button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: var(--black) !important;
+    color: var(--white) !important;
+    border: none !important;
+    border-radius: 2px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+    padding: 10px 20px !important;
+    cursor: pointer !important;
+    transition: background 0.3s !important;
+}
+
+.button:hover, input[type=submit]:hover, input[type=button]:hover {
+    background: var(--gold) !important;
+    color: var(--white) !important;
+}
+
+.button.default, input[type=submit].default {
+    background: var(--gold) !important;
+}
+
+.button.default:hover {
+    background: var(--gold-light) !important;
+}
+
+.deletelink {
+    background: transparent !important;
+    color: #c62828 !important;
+    border: 1px solid #e57373 !important;
+}
+
+.deletelink:hover {
+    background: #c62828 !important;
+    color: white !important;
+}
+
+/* === Submit row === */
+.submit-row {
+    background: var(--cream) !important;
+    border-top: 1px solid var(--border) !important;
+    padding: 12px 16px !important;
+}
+
+/* === Form fields === */
+input[type=text], input[type=password], input[type=email], input[type=number],
+input[type=url], textarea, select, .vTextField {
+    border: 1px solid var(--border) !important;
+    border-radius: 2px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+    background: var(--white) !important;
+    color: var(--charcoal) !important;
+    transition: border-color 0.2s !important;
+}
+
+input[type=text]:focus, input[type=password]:focus, input[type=email]:focus,
+textarea:focus, select:focus {
+    border-color: var(--gold) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.1) !important;
+}
+
+.form-row {
+    border-bottom: 1px solid var(--border) !important;
+    padding: 12px 0 !important;
+}
+
+label {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--gray) !important;
+}
+
+.required label::after {
+    color: var(--gold) !important;
+}
+
+/* === Fieldset === */
+fieldset.module {
+    margin-bottom: 20px !important;
+}
+
+fieldset.module h2 {
+    padding: 10px 16px !important;
+}
+
+/* === Messages / Alerts === */
+li.success {
+    background: #f0fdf4 !important;
+    border-left: 4px solid var(--success) !important;
+    color: var(--success) !important;
+}
+
+li.warning {
+    background: #fffbeb !important;
+    border-left: 4px solid var(--warning) !important;
+    color: var(--warning) !important;
+}
+
+li.error {
+    background: #fef2f2 !important;
+    border-left: 4px solid var(--error) !important;
+    color: var(--error) !important;
+}
+
+ul.messagelist {
+    margin: 0 0 16px !important;
+    padding: 0 !important;
+}
+
+ul.messagelist li {
+    border-radius: 2px !important;
+    padding: 12px 16px !important;
+    font-size: 12px !important;
+    margin-bottom: 8px !important;
+    list-style: none !important;
+}
+
+/* === Dashboard index page === */
+#content-main .module table td a {
+    font-weight: 500 !important;
+    color: var(--charcoal) !important;
+}
+
+#content-main .module table td a:hover {
+    color: var(--gold) !important;
+}
+
+/* === Object tools === */
+ul.object-tools li a {
+    background: var(--black) !important;
+    border-radius: 2px !important;
+    font-size: 10px !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    color: var(--gold) !important;
+    border: 1px solid var(--gold) !important;
+}
+
+ul.object-tools li a:hover {
+    background: var(--gold) !important;
+    color: var(--white) !important;
+}
+
+/* === Search bar === */
+#toolbar {
+    background: var(--cream) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 10px 16px !important;
+}
+
+#searchbar {
+    border: 1px solid var(--border) !important;
+    border-radius: 2px !important;
+    font-size: 12px !important;
+    padding: 7px 12px !important;
+    background: var(--white) !important;
+    transition: border-color 0.2s !important;
+}
+
+#searchbar:focus {
+    border-color: var(--gold) !important;
+    outline: none !important;
+}
+
+/* === Filters sidebar === */
+#changelist-filter {
+    background: var(--white) !important;
+    border-left: 1px solid var(--border) !important;
+}
+
+#changelist-filter h2 {
+    background: var(--black) !important;
+    color: var(--gold) !important;
+    font-size: 10px !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+    padding: 10px 16px !important;
+    margin: 0 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 600 !important;
+}
+
+#changelist-filter h3 {
+    font-size: 10px !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    color: var(--gray) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 8px 16px !important;
+    margin: 0 !important;
+}
+
+#changelist-filter li a {
+    color: var(--charcoal) !important;
+    font-size: 12px !important;
+    padding: 4px 16px !important;
+    display: block !important;
+}
+
+#changelist-filter li a:hover {
+    color: var(--gold) !important;
+}
+
+#changelist-filter li.selected a {
+    color: var(--gold) !important;
+    font-weight: 600 !important;
+}
+
+/* === Login page === */
+#login {
+    background: var(--cream) !important;
+}
+
+.login #container {
+    background: var(--white) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06) !important;
+    max-width: 420px !important;
+    padding: 40px !important;
+}
+
+.login #header {
+    border-radius: 4px 4px 0 0 !important;
+}
+
+/* === Responsive tweaks === */
+@media (max-width: 767px) {
+    #header { padding: 10px 16px !important; }
+    #content { padding: 16px !important; }
+}
