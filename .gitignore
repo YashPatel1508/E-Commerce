@@ -177,3 +177,4 @@ Thumbs.db
 .vscode/
 backend/.env
 backend/db.sqlite3
+frontend/node_modules
