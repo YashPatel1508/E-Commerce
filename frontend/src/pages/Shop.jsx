@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../api/axios';
+import apiService from '../api/apiService';
 import { Filter, X, ChevronRight } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
@@ -18,18 +18,20 @@ export default function Shop() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
-        api.get('/shop/categories/').then(res => setCategories(res.data.results || res.data));
-        api.get('/shop/subcategories/').then(res => setSubCategories(res.data.results || res.data));
+        apiService.products.categories().then(res => setCategories(res.data.results || res.data));
+        apiService.products.subcategories().then(res => setSubCategories(res.data.results || res.data));
     }, []);
 
     useEffect(() => {
         setLoading(true);
-        let url = `/shop/products/?ordering=${sort}`;
-        if (selectedCat) url += `&categories__id=${selectedCat}`;
-        if (selectedSub) url += `&subcategories__id=${selectedSub}`;
-        if (search) url += `&search=${search}`;
+        const params = {
+            ordering: sort,
+            categories__id: selectedCat || undefined,
+            subcategories__id: selectedSub || undefined,
+            search: search || undefined
+        };
 
-        api.get(url).then(res => {
+        apiService.products.list(params).then(res => {
             setProducts(res.data.results || res.data);
             setLoading(false);
         }).catch(err => {

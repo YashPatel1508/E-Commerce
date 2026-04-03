@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../api/axios';
+import apiService from '../api/apiService';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { ShoppingBag, Check, ArrowLeft, Plus, Minus } from 'lucide-react';
@@ -19,7 +19,7 @@ export default function ProductDetail() {
     useEffect(() => {
         window.scrollTo(0, 0);
         setQty(1);
-        api.get(`/shop/products/${id}/`)
+        apiService.products.get(id)
            .then(res => {
                setProduct(res.data);
                setLoading(false);

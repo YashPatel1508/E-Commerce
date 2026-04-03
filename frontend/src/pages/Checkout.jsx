@@ -2,7 +2,7 @@ import { useState, useContext } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
-import api from '../api/axios';
+import apiService from '../api/apiService';
 import { ArrowLeft, Loader2, Check, ShieldCheck, CreditCard } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatPrice } from '../utils/format';
@@ -31,7 +31,7 @@ export default function Checkout() {
 
         try {
             // Use Mock Payment Gateway instead of Stripe
-            const { data } = await api.post('/payments/mock-checkout/', { items });
+            const { data } = await apiService.post('/payments/mock-checkout/', { items });
             
             if (data.redirect_url) {
                 clearCart();
@@ -69,7 +69,6 @@ export default function Checkout() {
                                                 type="text" required placeholder="Full Name"
                                                 value={address.name}
                                                 onChange={e => setAddress(a => ({...a, name: e.target.value}))}
-                                                defaultValue={user?.first_name ? `${user.first_name} ${user.last_name}` : ''}
                                                 className="w-full bg-transparent border-b border-luxury-gray/40 px-0 py-2 text-sm text-luxury-black placeholder-luxury-gray/60 focus:border-luxury-gold focus:outline-none transition font-light"
                                             />
                                             <input

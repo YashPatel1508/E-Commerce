@@ -20,23 +20,76 @@ export default function Chatbot() {
         }
     }, [messages, isTyping]);
 
-    const handleSend = async (e) => {
-        e.preventDefault();
-        if (!input.trim()) return;
+    // Reset on Close
+    useEffect(() => {
+        if (!isOpen) {
+            setMessages([
+                { role: 'assistant', text: "Welcome to our luxury collection. I am ERA, your personal shopping assistant. How may I elevate your experience today?" }
+            ]);
+            setInput('');
+            setIsTyping(false);
+        }
+    }, [isOpen]);
 
-        const userMsg = input;
-        setInput('');
+    const handleSend = async (e, customMsg = null) => {
+        if (e) e.preventDefault();
+        const userMsg = customMsg || input;
+        if (!userMsg.trim()) return;
+
+        if (!customMsg) setInput('');
         setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
         setIsTyping(true);
 
         try {
             const { data } = await api.post('/chatbot/chat/', { message: userMsg });
-            setMessages(prev => [...prev, { role: 'assistant', text: data.reply }]);
+            setMessages(prev => [...prev, { 
+                role: 'assistant', 
+                text: data.reply,
+                actions: data.actions 
+            }]);
         } catch (error) {
             setMessages(prev => [...prev, { role: 'assistant', text: "I apologize, but I'm momentarily unavailable. Please browse our collection in the meantime." }]);
         } finally {
             setIsTyping(false);
         }
+    };
+
+    const handleAction = async (action) => {
+        setIsTyping(true);
+        try {
+            const { data } = await api.post('/chatbot/action/', action);
+            setMessages(prev => [...prev, { role: 'assistant', text: data.reply }]);
+        } catch (error) {
+            const errorMsg = error.response?.data?.detail || "I encountered an issue processing your request.";
+            setMessages(prev => [...prev, { role: 'assistant', text: `I apologize: ${errorMsg}` }]);
+        } finally {
+            setIsTyping(false);
+        }
+    };
+
+    const formatMessage = (text) => {
+        if (!text) return '';
+        // 1. Bold: **text**
+        let html = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-luxury-gold">$1</strong>');
+        
+        // 2. Lists: - item
+        const lines = html.split('\n');
+        let inList = false;
+        const formattedLines = lines.map(line => {
+            if (line.trim().startsWith('- ')) {
+                const item = line.trim().substring(2);
+                const prefix = !inList ? '<ul class="list-disc ml-4 my-2 space-y-1">' : '';
+                inList = true;
+                return `${prefix}<li class="pl-1">${item}</li>`;
+            } else {
+                const suffix = inList ? '</ul>' : '';
+                inList = false;
+                return suffix + line;
+            }
+        });
+        if (inList) formattedLines.push('</ul>');
+        
+        return formattedLines.join('\n').replace(/\n/g, '<br/>');
     };
 
     return (
@@ -75,12 +128,28 @@ export default function Chatbot() {
                                     key={idx}
                                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className={`max-w-[85%] p-4 text-xs leading-relaxed ${
-                                        msg.role === 'user' 
-                                            ? 'bg-luxury-black text-white rounded-[20px_20px_4px_20px]' 
-                                            : 'bg-white border border-luxury-gray/10 text-luxury-charcoal rounded-[20px_20px_20px_4px] shadow-sm'
-                                    }`}>
-                                        {msg.text}
+                                    <div className="flex flex-col gap-3 items-start w-full">
+                                        <div 
+                                            className={`max-w-[85%] p-4 text-xs leading-relaxed ${
+                                                msg.role === 'user' 
+                                                    ? 'bg-luxury-black text-white rounded-[20px_20px_4px_20px] self-end' 
+                                                    : 'bg-white border border-luxury-gray/10 text-luxury-charcoal rounded-[20px_20px_20px_4px] shadow-sm'
+                                            }`}
+                                            dangerouslySetInnerHTML={{ __html: formatMessage(msg.text) }}
+                                        />
+                                        {msg.actions && msg.actions.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                {msg.actions.map((action, i) => (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => handleAction(action)}
+                                                        className="px-4 py-2 bg-luxury-gold/10 border border-luxury-gold/30 text-luxury-black text-[10px] font-medium rounded-full hover:bg-luxury-gold hover:text-white transition-all duration-300"
+                                                    >
+                                                        {action.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             ))}

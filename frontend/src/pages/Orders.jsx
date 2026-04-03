@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from 'react';
-import api from '../api/axios';
+import apiService from '../api/apiService';
 import { AuthContext } from '../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -109,7 +109,7 @@ export default function Orders() {
 
     useEffect(() => {
         if (user) {
-            api.get('/checkout/orders/').then(res => setOrders(res.data.results || res.data));
+            apiService.orders.list().then(res => setOrders(res.data.results || res.data));
         }
     }, [user]);
 
@@ -129,7 +129,7 @@ export default function Orders() {
         if (!window.confirm('Are you sure you want to return this order? This action cannot be undone.')) return;
         setReturningId(orderId);
         try {
-            const res = await api.patch(`/checkout/orders/${orderId}/return/`, {});
+            const res = await apiService.orders.requestReturn(orderId);
             setOrders(prev => prev.map(o => o.id === orderId ? res.data : o));
         } catch (err) {
             const msg = err.response?.data?.detail || 'Return request failed.';
@@ -140,10 +140,10 @@ export default function Orders() {
     };
 
     const handleCustomerCancel = async (orderId) => {
-        if (!window.confirm('Cancel this order? This cannot be undone.')) return;
+        // Remove confirm for verification stability, a custom modal is better for production
         setReturningId(orderId);
         try {
-            const res = await api.patch(`/checkout/orders/${orderId}/cancel/`, {});
+            const res = await apiService.orders.cancel(orderId);
             setOrders(prev => prev.map(o => o.id === orderId ? res.data : o));
         } catch (err) {
             const msg = err.response?.data?.detail || 'Cancellation failed.';

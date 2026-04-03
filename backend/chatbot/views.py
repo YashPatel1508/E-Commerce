@@ -10,6 +10,7 @@ from orders.models import Order
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework.views import APIView
 
 # Configure Gemini
 genai.configure(api_key=os.environ.get('GEMINI_API_KEY', ''))
@@ -87,7 +88,6 @@ class ChatbotView(APIView):
         # --- 3. Gemini Prompt ---
         system_prompt = f"""
         You are ERA, the elite AI concierge for our luxury e-commerce house.
-        Your tone is sophisticated, precise, and profoundly helpful.
         
         Store context (Luxury Products):
         {product_context if product_context else "Curate general luxury suggestions."}
@@ -98,10 +98,12 @@ class ChatbotView(APIView):
         Current Time: {timezone.now().strftime('%Y-%m-%d %H:%M')}
         
         Directives:
-        - If the user asks about 'today', use the specific 'Orders placed today' context above.
-        - If an Order ID is present, give detailed status.
-        - Always remain elegant and supportive.
-        - If the user asks for information not in the context, use your internal knowledge about our brand's luxury identity.
+        - Response Format: ALWAYS use high-end Markdown. Use **bold** for emphasis, bullet points for lists, and `tables` for data comparisons where appropriate.
+        - Data Precision: If the user asks for a specific piece of information (e.g., "total payment", "status", "delivery date"), provide that value CLEARLY and PROMINENTLY (e.g., **Total Payment: ₹2160.00**). Avoid burying the direct answer in long paragraphs.
+        - Tone: Elegant, sophisticated, and elitist yet helpful.
+        - Proactiveness: If an order is "Pending" or "Processing", explicitly offer to cancel it. If "Delivered" within 7 days, mention the return option.
+        - Context Awareness: If the user asks about 'today', use the specific 'Orders placed today' context.
+        - Brand Alignment: If information is missing, speak from the perspective of a world-class luxury concierge.
         
         User's Message: "{user_message}"
         """
@@ -109,7 +111,27 @@ class ChatbotView(APIView):
         try:
             model = genai.GenerativeModel('gemini-2.5-flash')
             response = model.generate_content(system_prompt)
-            return Response({'reply': response.text, 'name': 'ERA'})
+            
+            # --- 4. Logic for Action Buttons ---
+            actions = []
+            if user.is_authenticated and order_id_match:
+                search_id = int(order_id_match.group(1))
+                try:
+                    order = Order.objects.get(id=search_id, user=user)
+                    if order.status in ('Pending', 'Processing'):
+                        actions.append({'label': f'Cancel Order #{order.id}', 'type': 'cancel', 'order_id': order.id})
+                    elif order.status == 'Delivered':
+                        deadline = order.created_at + timedelta(days=7)
+                        if timezone.now() <= deadline:
+                            actions.append({'label': f'Return Order #{order.id}', 'type': 'return', 'order_id': order.id})
+                except Order.DoesNotExist:
+                    pass
+
+            return Response({
+                'reply': response.text, 
+                'name': 'ERA',
+                'actions': actions
+            })
         except Exception as e:
             fallback = "I am currently refining my records. How else may I assist your luxury journey today?"
             if not os.environ.get('GEMINI_API_KEY'):
@@ -117,3 +139,51 @@ class ChatbotView(APIView):
             # Include error for debugging if needed (or log it)
             print(f"Chatbot Error: {str(e)}")
             return Response({'reply': f"{fallback} (Error: {str(e)[:50]}...)", 'name': 'ERA'})
+
+class ChatbotActionView(APIView):
+    """
+    Handle specific order actions (cancel, return) triggered by the chatbot.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        action_type = request.data.get('type')
+        order_id = request.data.get('order_id')
+        
+        if not action_type or not order_id:
+            return Response({'detail': 'Type and order_id are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if action_type == 'cancel':
+            if order.status not in ('Pending', 'Processing'):
+                return Response({'detail': 'Only Pending or Processing orders can be cancelled.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Stock restoration
+            for item in order.items.all():
+                if item.product:
+                    item.product.stock += item.quantity
+                    item.product.save()
+
+            order.status = 'Cancelled'
+            order.tracking_info = 'Cancelled via ERA Concierge service.'
+            order.save()
+            return Response({'reply': f'Order #{order_id} has been successfully cancelled at your request. Is there anything else I can assist you with?'})
+
+        elif action_type == 'return':
+            if order.status != 'Delivered':
+                return Response({'detail': 'Only delivered orders can be returned.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            due_at = order.created_at + timedelta(days=7)
+            if timezone.now() > due_at:
+                return Response({'detail': 'Return period (7 days) has expired.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            order.status = 'Return Requested'
+            order.tracking_info = 'Return initiated via ERA Concierge service. We will arrange pick-up.'
+            order.save()
+            return Response({'reply': f'Of course. I have initiated the return request for Order #{order_id}. A representative will contact you for pickup shortly.'})
+
+        return Response({'detail': 'Invalid action type.'}, status=status.HTTP_400_BAD_REQUEST)

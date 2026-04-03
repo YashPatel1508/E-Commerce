@@ -1,13 +1,13 @@
-from rest_framework import generics, permissions, status
+from rest_framework import permissions, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.utils import timezone
 from datetime import timedelta
 from .models import Order
 from .serializers import OrderSerializer
+from utils.viewsets import BaseModelViewSet
 
-
-class OrderListCreateView(generics.ListCreateAPIView):
+class OrderViewSet(BaseModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -16,28 +16,64 @@ class OrderListCreateView(generics.ListCreateAPIView):
             return Order.objects.all().order_by('-created_at')
         return Order.objects.filter(user=self.request.user).order_by('-created_at')
 
+    def cmd_cancel_pending(self, request, pk=None):
+        """Customer: cancel a Pending or Processing order. Restores stock."""
+        order = self.get_object()
+        if order.status not in ('Pending', 'Processing'):
+            return Response(
+                {'detail': 'Only orders in Pending or Preparing status can be cancelled by the customer.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-class OrderDetailView(generics.RetrieveAPIView):
-    serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
+        # Restore stock logic
+        for item in order.items.all():
+            if item.product:
+                item.product.stock += item.quantity
+                item.product.save()
 
-    def get_queryset(self):
-        if self.request.user.is_staff:
-            return Order.objects.all()
-        return Order.objects.filter(user=self.request.user)
+        order.status = 'Cancelled'
+        order.tracking_info = 'Order cancelled by customer. Any payment will be processed for refund.'
+        order.save()
 
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
 
-class OrderUpdateStatusView(APIView):
-    """Admin-only: update order status with business rules enforced."""
-    permission_classes = [permissions.IsAdminUser]
+    def cmd_request_return(self, request, pk=None):
+        """Customer: request return of a Delivered order within 7 days."""
+        order = self.get_object()
+        if order.status in Order.TERMINAL_STATUSES or order.status in ('Return Requested', 'Return Pickup', 'Refunded'):
+            return Response(
+                {'detail': 'A return has already been initiated for this order.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    def patch(self, request, pk):
-        try:
-            order = Order.objects.get(pk=pk)
-        except Order.DoesNotExist:
-            return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+        if order.status != 'Delivered':
+            return Response(
+                {'detail': 'Only delivered orders can be returned.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # Lock terminal statuses — no changes allowed once cancelled or refunded
+        # 7-day return window
+        deadline = order.created_at + timedelta(days=7)
+        if timezone.now() > deadline:
+            return Response(
+                {'detail': 'Return window has expired.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        order.status = 'Return Requested'
+        order.tracking_info = 'Your return request has been received.'
+        order.save()
+
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)
+
+    def cmd_update_status(self, request, pk=None):
+        """Admin: update order status with business rules."""
+        if not request.user.is_staff:
+            return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        order = self.get_object()
         if order.status in Order.TERMINAL_STATUSES:
             return Response(
                 {'detail': f'This order is {order.status} and cannot be modified further.'},
@@ -87,74 +123,5 @@ class OrderUpdateStatusView(APIView):
         order.tracking_info = tracking_messages.get(new_status, '')
         order.save()
 
-        serializer = OrderSerializer(order)
-        return Response(serializer.data)
-
-
-class OrderCancelReturnView(APIView):
-    """Customer: request return of a Delivered order within 7 days. Once set to Return Requested, status is locked for customer."""
-    permission_classes = [permissions.IsAuthenticated]
-
-    def patch(self, request, pk):
-        try:
-            order = Order.objects.get(pk=pk, user=request.user)
-        except Order.DoesNotExist:
-            return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Already in return/cancel flow — cannot change again
-        if order.status in Order.TERMINAL_STATUSES or order.status in ('Return Requested', 'Return Pickup', 'Refunded'):
-            return Response(
-                {'detail': 'A return has already been initiated for this order.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if order.status != 'Delivered':
-            return Response(
-                {'detail': 'Only delivered orders can be returned.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # 7-day return window from purchase date
-        deadline = order.created_at + timedelta(days=7)
-        if timezone.now() > deadline:
-            return Response(
-                {'detail': 'Return window has expired. Returns are only accepted within 7 days of purchase.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        order.status = 'Return Requested'
-        order.tracking_info = 'Your return request has been received. We will arrange a pickup soon.'
-        order.save()
-
-        serializer = OrderSerializer(order)
-        return Response(serializer.data)
-
-
-class OrderCustomerCancelPendingView(APIView):
-    """Customer: cancel a Pending or Processing order. Restores stock."""
-    permission_classes = [permissions.IsAuthenticated]
-
-    def patch(self, request, pk):
-        try:
-            order = Order.objects.get(pk=pk, user=request.user)
-        except Order.DoesNotExist:
-            return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        if order.status not in ('Pending', 'Processing'):
-            return Response(
-                {'detail': 'Only orders in Pending or Preparing status can be cancelled by the customer.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Restore stock logic
-        for item in order.items.all():
-            if item.product:
-                item.product.stock += item.quantity
-                item.product.save()
-
-        order.status = 'Cancelled'
-        order.tracking_info = 'Order cancelled by customer. Any payment will be processed for refund.'
-        order.save()
-
-        serializer = OrderSerializer(order)
+        serializer = self.get_serializer(order)
         return Response(serializer.data)
