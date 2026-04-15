@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/drei": "^9.80.0",
+    "@react-three/fiber": "^8.13.0",
     "axios": "^1.6.0",
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.4",
@@ -19,7 +21,8 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.18.0",
     "recharts": "^2.9.0",
-    "tailwind-merge": "^2.0.0"
+    "tailwind-merge": "^2.0.0",
+    "three": "^0.150.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

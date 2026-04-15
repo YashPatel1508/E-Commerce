@@ -5,7 +5,6 @@ import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { Trash2, ChevronRight, Plus, Minus } from 'lucide-react';
 import { formatPrice, getImageUrl } from '../utils/format';
-
 export default function Cart() {
     const { user } = useContext(AuthContext);
     const { cartItems, removeFromCart, clearCart, updateQuantity } = useContext(CartContext);
@@ -41,9 +40,9 @@ export default function Cart() {
                                         transition={{ duration: 0.3 }}
                                         className="py-8 flex flex-col sm:flex-row items-center sm:items-start group"
                                     >
-                                        <Link to={`/products/${item.product.id}`} className="flex-shrink-0 w-32 h-40 bg-[#f5f5f5] mb-6 sm:mb-0 sm:mr-8 overflow-hidden block">
+                                        <Link to={`/products/${item.product.id}`} className="flex-shrink-0 w-32 h-40 bg-[#f5f5f5] mb-6 sm:mb-0 sm:mr-8 block overflow-hidden group">
                                             {item.product.images?.[0] ? (
-                                                <img src={getImageUrl(item.product.images[0].image)} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-1000" />
+                                                <img src={getImageUrl(item.product.images[0].image)} alt={item.product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-luxury-gray/30 font-display text-sm tracking-widest">FeelLuxury</div>
                                             )}
